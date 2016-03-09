@@ -3,11 +3,13 @@ import datetime
 from hashlib import sha1
 from random import randint
 
+from Private.private import password
+
 
 def SHA(data):
     return sha1(data.encode('utf-8')).hexdigest()
 
-db = pw.MySQLDatabase('LoginUsers', user='Marek', passwd='passwd')
+db = pw.MySQLDatabase('LoginUsers', user='Marek', passwd=password)
 
 
 class LoginUser(pw.Model):
