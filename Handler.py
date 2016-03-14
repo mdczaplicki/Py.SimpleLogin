@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 import peewee as pw
 import datetime
 from hashlib import sha1
@@ -5,11 +7,10 @@ from Exceptions import *
 
 from Private.private import db_name, user, password
 
-
 def SHA(data):
     return sha1(data.encode('utf-8')).hexdigest()
 
-db = pw.MySQLDatabase(db_name, user=user, passwd=password)
+db = pw.MySQLDatabase(db_name, user=user, passwd=password, charset='utf8')
 
 
 class LoginUser(pw.Model):
@@ -29,8 +30,8 @@ class MySQLHandler:
         exist = False
         try:
             LoginUser.create(login=username,
-                             first_name=first,
-                             last_name=last,
+                             first_name=first.encode('utf-8'),
+                             last_name=last.encode('utf-8'),
                              password=checksum
                              ).save()
         except pw.IntegrityError as ex:
@@ -52,5 +53,8 @@ class MySQLHandler:
         return bool(count)
 
 
-# MySQLHandler().register('jottoooo', 'abc', 'a', 'a')
-# print(SHA('abc'))
+# MySQLHandler().register('test1', SHA('test1' + 'sabgahjgba'), 'Edward', 'Nozycoreki')
+# MySQLHandler().register('test2', SHA('test2' + 'sbcxsdgsgd'), 'Janusz', 'Kowalski')
+# MySQLHandler().register('test3', SHA('test3' + 'bnjsdkglas'), 'Krzysztof', 'Bengalski')
+# MySQLHandler().register('test4', SHA('test4' + 'm327t5us3s'), 'Artur', 'Barcis')
+# MySQLHandler().register('test5', SHA('test5' + '@!%sdghew$'), 'Cezary', 'Zak')
