@@ -1,38 +1,56 @@
 import peewee as pw
 import datetime
 from hashlib import sha1
-from random import randint
+from Exceptions import *
 
-from Private.private import password
+from Private.private import db_name, user, password
 
 
 def SHA(data):
     return sha1(data.encode('utf-8')).hexdigest()
 
-db = pw.MySQLDatabase('LoginUsers', user='Marek', passwd=password)
+db = pw.MySQLDatabase(db_name, user=user, passwd=password)
 
 
 class LoginUser(pw.Model):
-    login = pw.CharField(unique=True, max_length=20, primary_key=True, constraints=pw.Check('login REGEXP "[a-z][0-9]"'))
+    login = pw.CharField(unique=True, max_length=20, primary_key=True)
     first_name = pw.CharField(max_length=20)
     last_name = pw.CharField(max_length=30)
     password = pw.CharField(max_length=40)
-    create_date = pw.DateField(default=datetime.date.today)
+    create_date = pw.DateField(default=datetime.date.today, choices=None)
 
     class Meta:
         database = db
 
-# db.create_table(LoginUser)
-jotto = LoginUser.create(login='JOTTO22412',
-                         first_name='Marek',
-                         last_name='Czaplicki',
-                         password=SHA('JOTTO22412abc123')
-                         )
-jotto.save()
+
+class MySQLHandler:
+    @staticmethod
+    def register(username, checksum, first, last) -> bool:
+        exist = False
+        try:
+            LoginUser.create(login=username,
+                             first_name=first,
+                             last_name=last,
+                             password=checksum
+                             ).save()
+        except pw.IntegrityError as ex:
+            if ex.args[0] == 1062:
+                exist = True
+            else:
+                raise ex
+        finally:
+            if exist:
+                raise UserAlreadyExistsException('User is already in database')
+            return True
+        # peewee.IntegrityError: (1062, "Duplicate entry 'dupaa' for key 'PRIMARY'")
+
+    @staticmethod
+    def log_in(username, checksum) -> bool:
+        count = (LoginUser.select().where(LoginUser.login == username and LoginUser.password == checksum).count())
+        if count not in [0, 1]:
+            raise RecordsNumberException('Number of records corresponding to this user name is unusual: %s' % count)
+        return bool(count)
 
 
-
-# user = db.execute('SELECT * FROM loginuser;')
-user = db.execute_sql('SELECT * FROM loginuser')
-print('\n'.join([str(x) for x in list(user.fetchall())]))
-
+# MySQLHandler().register('jottoooo', 'abc', 'a', 'a')
+# print(SHA('abc'))
